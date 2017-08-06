@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import numpy as np
+import matplotlib.pyplot as plt
 import heapq
 import yaml
 
@@ -31,9 +32,12 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     #generate adjacency list
     X_list = []
     Y_list = []
+    i_list = []
+    j_list = []
     adj = []
+    occupancy_list = []
     for (i,j), obstacle in np.ndenumerate(occupancy_map):
-        #print(str(x) + ' ' + str(y) + ' ' + str(value))
+        print(str(i) + ' ' + str(j)) # + ' ' + str(value))
         x = (j+0.5)*x_spacing
         y = (i+0.5)*y_spacing
         #make adjacency list for this node
@@ -56,6 +60,9 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
             #print(adjEntry)
         X_list.append(x)
         Y_list.append(y)
+        i_list.append(i)
+        j_list.append(j)
+        occupancy_list.append(occupancy_map[i,j])
         adj.append(adjEntry)
     
     #execute dykstra
@@ -68,8 +75,8 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     print(y_spacing)
     print(start)
     print(goal)
-    startInd = int((start[1]/y_spacing)-0.5)*y_len+int((start[0]/x_spacing)-0.5)
-    goalInd  = int((goal[1]/y_spacing)-0.5)*y_len+int((goal[0]/x_spacing)-0.5)
+    startInd = int((start[0]/y_spacing)-0.5)*x_len+int((start[1]/x_spacing)-0.5)
+    goalInd  = int((goal[0]/y_spacing)-0.5)*x_len+int((goal[1]/x_spacing)-0.5)
 
     print()
     print(startInd)
@@ -81,7 +88,6 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     heapq.heapify(h)
     while len(h) > 0:
         u = heapq.heappop(h)
-        print(u)
         for ind,i in enumerate(adj[u[1]]):
             if dist[i[0]] > u[0] + i[1]:
                 dist[i[0]] = u[0] + i[1]
@@ -90,18 +96,30 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     if dist[goalInd] == maxDist:
         return -1
     else:
-        return dist[goalInd]
-    
-    
-    
-    
-    
-    
-    
-       
-            
-        
-    
+    	#create path
+    	print('distance = ' + str(dist[goalInd]))
+    	path = []
+    	curInd = goalInd
+    	while curInd != startInd:
+    		path.append(curInd)
+    		curInd = prev[curInd]
+    	xPath = [j_list[i] for i in path]
+    	yPath = [i_list[i] for i in path]
+
+    	plt.figure(1)
+    	borderX = [0, x_len-1, 0, x_len-1]
+    	borderY = [0, 0,y_len-1,  y_len-1]
+    	obstaclesI = [i_list[i] for i in range(len(i_list)) if occupancy_list[i] == 1]
+    	obstaclesJ = [j_list[i] for i in range(len(i_list)) if occupancy_list[i] == 1]
+
+    	plt.scatter(borderX,borderY,color = 'black',marker = 's',s=100)
+    	plt.scatter(obstaclesJ,obstaclesI,color = 'black')
+
+    	plt.scatter(j_list[startInd],i_list[startInd],color = 'red', marker = 's', s=100)
+    	plt.scatter(j_list[goalInd],i_list[goalInd],color = 'green', marker = 's', s=100)
+
+    	plt.scatter(xPath,yPath)
+    	return path
     
 
 def test():
