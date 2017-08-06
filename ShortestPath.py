@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import numpy as np
+import heapq
 import yaml
 
 
@@ -22,29 +23,81 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     """
     #print(occupancy_map)
     #create adjacency list
-    x_len = occupancy_map.shape[0]
-    y_len = occupancy_map.shape[1]
-    adjMap = [[[]]*y_len for x in range(x_len)]
-    for (x,y), obstacle in np.ndenumerate(occupancy_map):
+    y_len = occupancy_map.shape[0]
+    x_len = occupancy_map.shape[1]
+    #adjMap = [[[]]*y_len for x in range(x_len)]
+    print(occupancy_map)
+    
+    #generate adjacency list
+    X_list = []
+    Y_list = []
+    adj = []
+    for (i,j), obstacle in np.ndenumerate(occupancy_map):
         #print(str(x) + ' ' + str(y) + ' ' + str(value))
-        #make adajcency list for this node
+        x = (j+0.5)*x_spacing
+        y = (i+0.5)*y_spacing
+        #make adjacency list for this node
         adjEntry = []
         if not obstacle:
-            if x > 0:
-                if not occupancy_map[x-1,y]:
-                    adjEntry.append([x-1,y,x_spacing])
-            if x < x_len:
-                if not occupancy_map[x+1,y]:
-                    adjEntry.append([x+1,y,x_spacing])
-            if y > 0:
-                if not occupancy_map[x,y-1]:
-                    adjEntry.append([x,y-1,x_spacing])
-            if y < y_len:
-                if not occupancy_map[x,y+1]:
-                    adjEntry.append([x,y+1,y_spacing])
+            #print(x)
+            #print(y)
+            if j > 0:
+                if not occupancy_map[i,j-1]:
+                    adjEntry.append([(j-1)*y_len+i,x_spacing])
+            if j < x_len:
+                if not occupancy_map[i,j+1]:
+                    adjEntry.append([(j+1)*y_len+i,x_spacing])
+            if i > 0:
+                if not occupancy_map[i-1,j]:
+                    adjEntry.append([j*y_len+i-1,x_spacing])
+            if i < y_len:
+                if not occupancy_map[i+1,j]:
+                    adjEntry.append([j*y_len+i+1,y_spacing])
             #print(adjEntry)
-            adjMap[x][y]=adjEntry
-    print(adjMap)
+        X_list.append(x)
+        Y_list.append(y)
+        adj.append(adjEntry)
+    
+    #execute dykstra
+    #initialize to xlen + ylen * num grid points
+    maxDist = (x_spacing+y_spacing)*len(adj)
+    dist = [maxDist] * len(adj)
+
+    print()
+    print(x_spacing)
+    print(y_spacing)
+    print(start)
+    print(goal)
+    startInd = int((start[1]/y_spacing)-0.5)*y_len+int((start[0]/x_spacing)-0.5)
+    goalInd  = int((goal[1]/y_spacing)-0.5)*y_len+int((goal[0]/x_spacing)-0.5)
+
+    print()
+    print(startInd)
+    print(goalInd)
+    print()
+    dist[startInd] = 0
+    prev = [-1]*len(adj)
+    h = list(zip(dist,range(len(dist))))
+    heapq.heapify(h)
+    while len(h) > 0:
+        u = heapq.heappop(h)
+        print(u)
+        for ind,i in enumerate(adj[u[1]]):
+            if dist[i[0]] > u[0] + i[1]:
+                dist[i[0]] = u[0] + i[1]
+                prev[i[0]] = u[1]
+                heapq.heappush(h,(dist[i[0]],i[0]))
+    if dist[goalInd] == maxDist:
+        return -1
+    else:
+        return dist[goalInd]
+    
+    
+    
+    
+    
+    
+    
        
             
         
