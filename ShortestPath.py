@@ -152,7 +152,7 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     		y = (i+0.5)*y_spacing
     		metricPath.append([x,y])
     	
-    	return metricPath
+    	return np.array(metricPath)
     
 
 def test():
