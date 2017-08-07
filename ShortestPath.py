@@ -47,16 +47,16 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
             #print(y)
             if j > 0:
                 if not occupancy_map[i,j-1]:
-                    adjEntry.append([(j-1)*y_len+i,x_spacing])
+                    adjEntry.append([i*x_len+(j-1),x_spacing])
             if j < x_len:
                 if not occupancy_map[i,j+1]:
-                    adjEntry.append([(j+1)*y_len+i,x_spacing])
+                    adjEntry.append([i*x_len+(j+1),x_spacing])
             if i > 0:
                 if not occupancy_map[i-1,j]:
-                    adjEntry.append([j*y_len+i-1,x_spacing])
+                    adjEntry.append([(i-1)*x_len+j,y_spacing])
             if i < y_len:
                 if not occupancy_map[i+1,j]:
-                    adjEntry.append([j*y_len+i+1,y_spacing])
+                    adjEntry.append([(i+1)*x_len+j,y_spacing])
             #print(adjEntry)
         X_list.append(x)
         Y_list.append(y)
@@ -71,16 +71,33 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     dist = [maxDist] * len(adj)
 
     print()
-    print(x_spacing)
-    print(y_spacing)
-    print(start)
-    print(goal)
-    startInd = int((start[0]/y_spacing)-0.5)*x_len+int((start[1]/x_spacing)-0.5)
-    goalInd  = int((goal[0]/y_spacing)-0.5)*x_len+int((goal[1]/x_spacing)-0.5)
+    print('xspacing: ' + str(x_spacing))
+    print('yspacing: ' + str(y_spacing))
+    print('xLen: ' + str(x_len))
+    print('yLen: ' + str(y_len))
+
+    print('start: ' + str(start))
+    print('goal: ' + str(goal))
+    
+    startJ = int(start[0]/x_spacing - 0.5)
+    startI = int(start[1]/y_spacing - 0.5)
+    
+    print('startI: ' + str(startI))
+    print('startJ: ' + str(startJ))
+    
+    goalJ = int(goal[0]/x_spacing - 0.5)
+    goalI = int(goal[1]/y_spacing - 0.5)
+    
+    print('goalI: ' + str(goalI))
+    print('goalJ: ' + str(goalJ))
+    
+    
+    startInd = startI*x_len+startJ;
+    goalInd  = goalI*x_len+goalJ;
 
     print()
-    print(startInd)
-    print(goalInd)
+    print('startInd: ' + str(startInd))
+    print('goalInd: ' + str(goalInd))
     print()
     dist[startInd] = 0
     prev = [-1]*len(adj)
