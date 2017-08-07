@@ -37,7 +37,7 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     adj = []
     occupancy_list = []
     for (i,j), obstacle in np.ndenumerate(occupancy_map):
-        print(str(i) + ' ' + str(j)) # + ' ' + str(value))
+        #print(str(i) + ' ' + str(j)) # + ' ' + str(value))
         x = (j+0.5)*x_spacing
         y = (i+0.5)*y_spacing
         #make adjacency list for this node
@@ -48,13 +48,13 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
             if j > 0:
                 if not occupancy_map[i,j-1]:
                     adjEntry.append([i*x_len+(j-1),x_spacing])
-            if j < x_len:
+            if j < x_len-1:
                 if not occupancy_map[i,j+1]:
                     adjEntry.append([i*x_len+(j+1),x_spacing])
             if i > 0:
                 if not occupancy_map[i-1,j]:
                     adjEntry.append([(i-1)*x_len+j,y_spacing])
-            if i < y_len:
+            if i < y_len-1:
                 if not occupancy_map[i+1,j]:
                     adjEntry.append([(i+1)*x_len+j,y_spacing])
             #print(adjEntry)
@@ -120,10 +120,11 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     	while curInd != startInd:
     		path.append(curInd)
     		curInd = prev[curInd]
+    	path.append(startInd)
     	xPath = [j_list[i] for i in path]
     	yPath = [i_list[i] for i in path]
 
-    	plt.figure(1)
+    	plt.figure()
     	borderX = [0, x_len-1, 0, x_len-1]
     	borderY = [0, 0,y_len-1,  y_len-1]
     	obstaclesI = [i_list[i] for i in range(len(i_list)) if occupancy_list[i] == 1]
@@ -135,8 +136,23 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     	plt.scatter(j_list[startInd],i_list[startInd],color = 'red', marker = 's', s=100)
     	plt.scatter(j_list[goalInd],i_list[goalInd],color = 'green', marker = 's', s=100)
 
-    	plt.scatter(xPath,yPath)
-    	return path
+    	plt.scatter(xPath,yPath,color = 'magenta')
+    	ax = plt.gca()
+    	ax.patch.set_facecolor('grey')
+    	#plt.show()
+    	
+    	#convert path to metric coordinates
+    	metricPath = []
+    	for k in reversed(path):
+    		print(k)
+    	
+    		j= k % x_len
+    		i = (k-j)/x_len
+    		x = (j+0.5)*x_spacing+2
+    		y = (i+0.5)*y_spacing
+    		metricPath.append([x,y])
+    	
+    	return metricPath
     
 
 def test():
@@ -171,6 +187,11 @@ def test():
         ])
     if np.array_equal(path1,true_path1):
       print("Path 1 passes")
+    else:
+      print("Path 1 fails")
+      print(path1)
+      print(true_path1)
+    
 
     test_map2 = np.array([
              [0, 0, 0, 0, 0, 0, 0, 0],
@@ -200,6 +221,11 @@ def test():
                            [ 1.1,  0.9]])
     if np.array_equal(path2,true_path2):
       print("Path 2 passes")
+    else:
+      print("Path 2 fails")
+      print(path2)
+      print(true_path2)
+      
 
 def test_for_grader():
     """
@@ -270,4 +296,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+    test()
+    test_for_grader()
 
