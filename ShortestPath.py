@@ -6,6 +6,28 @@ import heapq
 import yaml
 
 
+def closestUnoccupied(occupancy_map,x_len,y_len,Icoord,Jcoord):
+    
+    #find closest unoccupied cell
+    minDist = float('inf')
+    for i in [-1,0,1]:
+        for j in [-1,0,1]:
+            I = int(np.floor(Icoord+i));
+            J = int(np.floor(Jcoord+j));
+            if  J > 0 and I > 0 and J < x_len-1 and I < y_len:
+                if not occupancy_map[I,J]:
+                    dist = (Icoord-I)**2 + (Jcoord-j)**2
+                    if dist < minDist:
+                        minDist = dist
+                        minI = I
+                        minJ = J
+                    #print('dist: ' + str(dist))
+                    #print('i and j + '  + str(i) + ' ' + str(j))
+    #print('minDist ' + str(minDist))
+    #print('minI ' + str(minI))
+    #print('minJ ' + str(minJ))
+    return [int(minI),int(minJ)]
+
 def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     """
     Implements Dijkstra's shortest path algorithm
@@ -22,12 +44,13 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
         starting with "start" and ending with "end" (each node is in
         metric coordinates)
     """
+    doPlots = True
     #print(occupancy_map)
     #create adjacency list
     y_len = occupancy_map.shape[0]
     x_len = occupancy_map.shape[1]
     #adjMap = [[[]]*y_len for x in range(x_len)]
-    print(occupancy_map)
+    #print(occupancy_map)
     
     #generate adjacency list
     X_list = []
@@ -70,35 +93,24 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
     maxDist = (x_spacing+y_spacing)*len(adj)
     dist = [maxDist] * len(adj)
 
-    print()
-    print('xspacing: ' + str(x_spacing))
-    print('yspacing: ' + str(y_spacing))
-    print('xLen: ' + str(x_len))
-    print('yLen: ' + str(y_len))
-
-    print('start: ' + str(start))
-    print('goal: ' + str(goal))
+    #place start and ensure it's not in an obstacle
+    startGridJ = start[0][0]/x_spacing - 0.5
+    startGridI = start[1][0]/y_spacing - 0.5
+    [startI,startJ] = closestUnoccupied(occupancy_map,x_len,y_len,startGridI,startGridJ)
+               
     
-    startJ = int(start[0]/x_spacing - 0.5)
-    startI = int(start[1]/y_spacing - 0.5)
+    goalGridJ = goal[0][0]/x_spacing - 0.5
+    goalGridI = goal[1][0]/y_spacing - 0.5
     
-    print('startI: ' + str(startI))
-    print('startJ: ' + str(startJ))
     
-    goalJ = int(goal[0]/x_spacing - 0.5)
-    goalI = int(goal[1]/y_spacing - 0.5)
-    
-    print('goalI: ' + str(goalI))
-    print('goalJ: ' + str(goalJ))
+    [goalI,goalJ] = closestUnoccupied(occupancy_map,x_len,y_len,goalGridI,goalGridJ)
+   
+   
     
     
     startInd = startI*x_len+startJ;
     goalInd  = goalI*x_len+goalJ;
 
-    print()
-    print('startInd: ' + str(startInd))
-    print('goalInd: ' + str(goalInd))
-    print()
     dist[startInd] = 0
     prev = [-1]*len(adj)
     h = list(zip(dist,range(len(dist))))
@@ -110,49 +122,60 @@ def dijkstras(occupancy_map,x_spacing,y_spacing,start,goal):
                 dist[i[0]] = u[0] + i[1]
                 prev[i[0]] = u[1]
                 heapq.heappush(h,(dist[i[0]],i[0]))
+    
+  
+    if doPlots:
+        plt.figure()
+        borderX = [0, x_len-1, 0, x_len-1]
+        borderY = [0, 0,y_len-1,  y_len-1]
+        obstaclesI = [i_list[i] for i in range(len(i_list)) if occupancy_list[i] == 1]
+        obstaclesJ = [j_list[i] for i in range(len(i_list)) if occupancy_list[i] == 1]
+    
+        plt.scatter(borderX,borderY,color = 'black',marker = 's',s=100)
+        plt.scatter(obstaclesJ,obstaclesI,color = 'black')
+    
+        plt.scatter(j_list[startInd],i_list[startInd],color = 'red', marker = 's', s=100)
+        plt.scatter(j_list[goalInd],i_list[goalInd],color = 'green', marker = 's', s=100)
+        ax = plt.gca()
+        ax.patch.set_facecolor('grey')
+  
+    
     if dist[goalInd] == maxDist:
         return -1
     else:
-    	#create path
-    	print('distance = ' + str(dist[goalInd]))
-    	path = []
-    	curInd = goalInd
-    	while curInd != startInd:
-    		path.append(curInd)
-    		curInd = prev[curInd]
-    	path.append(startInd)
-    	xPath = [j_list[i] for i in path]
-    	yPath = [i_list[i] for i in path]
+        #create path
+        #print('distance = ' + str(dist[goalInd]))
+        path = []
+        curInd = goalInd
+        while curInd != startInd:
+            path.append(curInd)
+            curInd = prev[curInd]
+        xPath = [j_list[i] for i in path]
+        yPath = [i_list[i] for i in path]
 
-    	plt.figure()
-    	borderX = [0, x_len-1, 0, x_len-1]
-    	borderY = [0, 0,y_len-1,  y_len-1]
-    	obstaclesI = [i_list[i] for i in range(len(i_list)) if occupancy_list[i] == 1]
-    	obstaclesJ = [j_list[i] for i in range(len(i_list)) if occupancy_list[i] == 1]
+        if doPlots:
+            plt.scatter(xPath,yPath,color = 'magenta')
+        
+        #plt.show()
+        
+        #convert path to metric coordinates
+        metricPath = []
+        #add start
+        metricPath.append([start[0][0],start[1][0]])
+        
+        for k in reversed(path):
+            #print(k)
+        
+            j= k % x_len
+            i = (k-j)/x_len
+            x = round((j+0.5)*x_spacing,3)
+            y = round((i+0.5)*y_spacing,3)
+            metricPath.append([x,y])
+        
 
-    	plt.scatter(borderX,borderY,color = 'black',marker = 's',s=100)
-    	plt.scatter(obstaclesJ,obstaclesI,color = 'black')
-
-    	plt.scatter(j_list[startInd],i_list[startInd],color = 'red', marker = 's', s=100)
-    	plt.scatter(j_list[goalInd],i_list[goalInd],color = 'green', marker = 's', s=100)
-
-    	plt.scatter(xPath,yPath,color = 'magenta')
-    	ax = plt.gca()
-    	ax.patch.set_facecolor('grey')
-    	#plt.show()
-    	
-    	#convert path to metric coordinates
-    	metricPath = []
-    	for k in reversed(path):
-    		print(k)
-    	
-    		j= k % x_len
-    		i = (k-j)/x_len
-    		x = (j+0.5)*x_spacing+2
-    		y = (i+0.5)*y_spacing
-    		metricPath.append([x,y])
-    	
-    	return np.array(metricPath)
+        
+          
+        return np.array(metricPath)
     
 
 def test():
@@ -189,7 +212,9 @@ def test():
       print("Path 1 passes")
     else:
       print("Path 1 fails")
+      print("algoPath")
       print(path1)
+      print("true path")
       print(true_path1)
     
 
@@ -223,7 +248,9 @@ def test():
       print("Path 2 passes")
     else:
       print("Path 2 fails")
+      print("algoPath")
       print(path2)
+      print("true path")
       print(true_path2)
       
 
@@ -295,7 +322,7 @@ def main():
     print(path)
 
 if __name__ == '__main__':
-    main()
-    test()
+    #main()
+    #test()
     test_for_grader()
 
