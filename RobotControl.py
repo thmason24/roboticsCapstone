@@ -3,19 +3,23 @@
 ROS based interface for the Course Robotics Specialization Capstone Autonomous Rover.
 Updated June 19 2016.
 """
-#import rospy
 
 import yaml
 import numpy as np
 
 import sys
 
+onRobot = True
 # TODO for student: Comment this section when running on the robot 
-from RobotSim import RobotSim
-import matplotlib.pyplot as plt
+if not onRobot:
+    from RobotSim import RobotSim
+    import matplotlib.pyplot as plt
 
 # TODO for student: uncomment when changing to the robot
-# from ros_interface import ROSInterface
+if onRobot:
+    #from ros_interface import ROSInterface
+    import RosInterface
+    import rospy
 
 # TODO for student: User files, uncomment as completed
 #from MyShortestPath import dijkstras
@@ -57,8 +61,11 @@ class RobotControl(object):
         """
 
         # TODO for student: Comment this when running on the robot 
-        self.robot_sim = RobotSim(world_map, occupancy_map, pos_init, pos_goal,
-                                  max_speed, max_omega, x_spacing, y_spacing)
+        if onRobot:
+            self.ros_interface = RosInterface.ROSInterface(t_cam_to_body)
+        else:
+            self.robot_sim = RobotSim(world_map, occupancy_map, pos_init, pos_goal,
+                                      max_speed, max_omega, x_spacing, y_spacing)
         # TODO for student: Use this when transferring code to robot
         # Handles all the ROS related items
         #self.ros_interface = ROSInterface(t_cam_to_body)
@@ -76,18 +83,24 @@ class RobotControl(object):
         are done. This function is called at 60Hz
         """
         # TODO for student: Comment this when running on the robot 
-        meas = self.robot_sim.get_measurements()
-        imu_meas = self.robot_sim.get_imu()
-        self.robot_sim.command_velocity(0.3, 0)
-        # TODO for student: Use this when transferring code to robot
-        # meas = self.ros_interface.get_measurements()
-        # imu_meas = self.ros_interface.get_imu()
+        if onRobot:
+            meas = self.ros_interface.get_measurements()
+            imu_meas = self.ros_interface.get_imu()
+            self.ros_interface.command_velocity(0.3, 0)
 
+        else:
+            meas = self.robot_sim.get_measurements()
+            imu_meas = self.robot_sim.get_imu()
+            self.robot_sim.command_velocity(0.1, 0)
+        
         return
     
 def main(args):
     # Load parameters from yaml
-    param_path = 'params.yaml' # rospy.get_param("~param_path")
+    if onRobot:
+        param_path = '/home/pi/catkin_ws/src/robot_control/src/params.yaml'
+    else:
+        param_path = 'params.yaml' # rospy.get_param("~param_path")
     f = open(param_path,'r')
     params_raw = f.read()
     f.close()
@@ -109,21 +122,24 @@ def main(args):
 
     # TODO for student: Comment this when running on the robot 
     # Run the simulation
-    while not robotControl.robot_sim.done and plt.get_fignums():
-        robotControl.process_measurements()
-        robotControl.robot_sim.update_frame()
+    if not onRobot:
+        while not robotControl.robot_sim.done and plt.get_fignums():
+            robotControl.process_measurements()
+            robotControl.robot_sim.update_frame()
 
-    plt.ioff()
-    plt.show()
+        plt.ioff()
+        plt.show()
 
     # TODO for student: Use this to run the interface on the robot
     # Call process_measurements at 60Hz
-    """r = rospy.Rate(60)
-    while not rospy.is_shutdown():
-        robotControl.process_measurements()
-        r.sleep()
-    # Done, stop robot
-    robotControl.ros_interface.command_velocity(0,0)"""
+    if onRobot:
+        rospy.init_node('node', anonymous=True)
+        r = rospy.Rate(60)
+        while not rospy.is_shutdown():
+            robotControl.process_measurements()
+            r.sleep()
+        # Done, stop robot
+        robotControl.ros_interface.command_velocity(0,0)
 
 if __name__ == "__main__":
     main(sys.argv)
