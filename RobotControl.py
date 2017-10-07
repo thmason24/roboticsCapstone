@@ -6,10 +6,11 @@ Updated June 19 2016.
 
 import yaml
 import numpy as np
+import DiffDriveController as ddc
 
 import sys
 
-onRobot = True
+onRobot = False
 # TODO for student: Comment this section when running on the robot 
 if not onRobot:
     from RobotSim import RobotSim
@@ -66,6 +67,18 @@ class RobotControl(object):
         else:
             self.robot_sim = RobotSim(world_map, occupancy_map, pos_init, pos_goal,
                                       max_speed, max_omega, x_spacing, y_spacing)
+
+        #initialize differential drive controller
+        maxSpeed = 0.5
+        maxOmega = 0.5
+        self.controller = ddc.DiffDriveController(maxSpeed, maxOmega)
+        self.velocity = 0
+        self.omega    = 0
+        self.done = False
+        self.missedTagCount = 0
+
+
+
         # TODO for student: Use this when transferring code to robot
         # Handles all the ROS related items
         #self.ros_interface = ROSInterface(t_cam_to_body)
@@ -86,13 +99,36 @@ class RobotControl(object):
         if onRobot:
             meas = self.ros_interface.get_measurements()
             imu_meas = self.ros_interface.get_imu()
-            self.ros_interface.command_velocity(0.3, 0)
-
         else:
             meas = self.robot_sim.get_measurements()
             imu_meas = self.robot_sim.get_imu()
-            self.robot_sim.command_velocity(0.1, 0)
-        
+
+        #compute velocity
+        #get measurements for tag 3
+        goal = [0.2,-0.1]
+        tagFound = False
+        if not meas == None:
+            for i in meas:
+                if i[3] == 3:
+                    (self.velocity,self.omega,self.done) = self.controller.compute_vel(i,goal)
+                    tagFound = True
+                    #print('velocity: ' + str(self.velocity))
+                    #print('omega   : ' + str(self.omega))
+        if tagFound:
+            self.missedTagCount = 0
+        else:
+
+            self.missedTagCount += 1
+
+        if self.missedTagCount > 10:
+            self.velocity = 0
+            self.omega = 0
+
+        #print(self.velocity)
+        if onRobot:
+            self.ros_interface.command_velocity(0.3, 0.8)
+        else:
+            self.robot_sim.command_velocity(self.velocity,self.omega)
         return
     
 def main(args):
@@ -135,11 +171,12 @@ def main(args):
     if onRobot:
         rospy.init_node('node', anonymous=True)
         r = rospy.Rate(60)
-        while not rospy.is_shutdown():
+        time = rospy.get_time()
+        while not rospy.is_shutdown() and time + 10 > rospy.get_time():
             robotControl.process_measurements()
             r.sleep()
         # Done, stop robot
-        robotControl.ros_interface.command_velocity(0,0)
+        robotControl.ros_interface.command_velocity(0.3,0)
 
 if __name__ == "__main__":
     main(sys.argv)

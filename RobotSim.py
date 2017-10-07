@@ -233,6 +233,9 @@ class RobotSim(object):
         Outputs: None, but controls the robot
         """
         noise = np.random.normal(0,self.__control_noise)
+        if vx == 0 and wz == 0: #the robot won't move if commanded velocity is zero
+            noise = [0,0]
+
         self.__vel = min(max(vx + noise[0],0),self.__MAX_VELOCITY)
         self.__omega = min(max(wz + noise[1],-self.__MAX_OMEGA),self.__MAX_OMEGA)
 

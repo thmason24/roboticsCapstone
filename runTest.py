@@ -24,6 +24,8 @@ remoteFile = '/home/pi/catkin_ws/src/robot_control/src/RobotControl.py'
 #transfer file
 scp.put(localFile, remoteFile) 
 scp.put('params.yaml','/home/pi/catkin_ws/src/robot_control/src/params.yaml')
+scp.put('DiffDriveController.py','/home/pi/catkin_ws/src/robot_control/src/DiffDriveController.py')
+
 #close scp
 scp.close()
 
