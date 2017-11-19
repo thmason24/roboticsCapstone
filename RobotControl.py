@@ -10,7 +10,7 @@ import DiffDriveController as ddc
 
 import sys
 
-onRobot = False
+onRobot = True
 # TODO for student: Comment this section when running on the robot 
 if not onRobot:
     from RobotSim import RobotSim
@@ -69,12 +69,19 @@ class RobotControl(object):
                                       max_speed, max_omega, x_spacing, y_spacing)
 
         #initialize differential drive controller
-        maxSpeed = 0.5
-        maxOmega = 0.5
-        self.controller = ddc.DiffDriveController(maxSpeed, maxOmega)
+        maxSpeed = 0.3
+        maxOmega = 0.6
+        kp = 0.5
+        ka = 1.2
+        kb = 0
+        self.controller = ddc.DiffDriveController(maxSpeed, maxOmega, kp, ka, kb)
         self.velocity = 0
+        self.velCount = 0
         self.omega    = 0
         self.done = False
+        self.rho = 0.0
+        self.posX = 0.0
+        self.posY = 0.0
         self.missedTagCount = 0
 
 
@@ -99,38 +106,60 @@ class RobotControl(object):
         if onRobot:
             meas = self.ros_interface.get_measurements()
             imu_meas = self.ros_interface.get_imu()
+            #print('imu : ' + str(imu_meas))
         else:
             meas = self.robot_sim.get_measurements()
             imu_meas = self.robot_sim.get_imu()
 
         #compute velocity
         #get measurements for tag 3
-        goal = [0.2,-0.1]
+        goal = [0.1, 0.0]
         tagFound = False
-        if not meas == None:
+        if meas == None:
+            #print('no tag')
+            pass
+        else:
             for i in meas:
-                if i[3] == 3:
-                    (self.velocity,self.omega,self.done) = self.controller.compute_vel(i,goal)
+                #print('hello')
+                #print('saw tag ' + str(i[3]))
+                if i[3] == 1:
+                    (self.velocity,self.omega,self.done,self.rho,self.posX,self.posY) = self.controller.compute_vel(i,goal)
                     tagFound = True
-                    #print('velocity: ' + str(self.velocity))
+                    #print('velocity: ' + str(self.velocity) + ' ' + 'omega: ' + str(self.omega))
                     #print('omega   : ' + str(self.omega))
+        
         if tagFound:
             self.missedTagCount = 0
         else:
-
             self.missedTagCount += 1
-
-        if self.missedTagCount > 10:
+        
+        if self.missedTagCount > 30:
             self.velocity = 0
             self.omega = 0
 
         #print(self.velocity)
         if onRobot:
-            self.ros_interface.command_velocity(0.3, 0.8)
+            #print('velocity: ' + str(self.velocity))
+            #print('tags: ' + str(meas))
+            #if move:
+            #    self.ros_interface.command_velocity(0.3, 0.8)
+            if True:
+                print('v: '+ str(round(self.velocity,3)) + 
+                    ' Omega: ' + str(round(self.omega,3)) + 
+                    ' rho ' + str(round(self.rho,3)) +
+                    ' X ' + str(round(self.posX,3)) +
+                    ' Y ' + str(round(self.posY,3)) +
+                    ' done: ' + str(self.done) + 
+                    ' tag : ' + str(tagFound))
+
+            #self.velCount += 1
+            #print('vel: ' + str(self.velCount))
+            self.ros_interface.command_velocity(self.velocity,self.omega)
+            #self.ros_interface.command_velocity(0.3,0.3)
         else:
             self.robot_sim.command_velocity(self.velocity,self.omega)
         return
-    
+
 def main(args):
     # Load parameters from yaml
     if onRobot:
@@ -170,13 +199,14 @@ def main(args):
     # Call process_measurements at 60Hz
     if onRobot:
         rospy.init_node('node', anonymous=True)
-        r = rospy.Rate(60)
+        r = rospy.Rate(30)
         time = rospy.get_time()
-        while not rospy.is_shutdown() and time + 10 > rospy.get_time():
+        while not rospy.is_shutdown(): #and time + 10 > rospy.get_time():
             robotControl.process_measurements()
             r.sleep()
         # Done, stop robot
-        robotControl.ros_interface.command_velocity(0.3,0)
+        print('rospy done shutdown')
+        robotControl.ros_interface.command_velocity(0,0)
 
 if __name__ == "__main__":
     main(sys.argv)

@@ -6,12 +6,13 @@ class DiffDriveController():
     """
     Class used for controlling the robot linear and angular velocity
     """
-    def __init__(self, max_speed, max_omega):
+    def __init__(self, max_speed, max_omega,kp,ka,kb):
         # TODO for
         # Student: Specify these parameters
-        self.kp= 0.1
-        self.ka= 0.1
-        self.kb= 0
+        self.kp = kp
+        self.ka = ka
+        self.kb = kb
+        print('diffDriveCon')
 
         #check stability requirements
         if self.kp <= 0 or self.kb > 0 or self.ka < self.kb:
@@ -50,15 +51,18 @@ class DiffDriveController():
 
         if not done:
             velocity = min([velCalc,self.MAX_SPEED])
-            omega    = min([omegaCalc,self.MAX_OMEGA])
+            omega    = (omegaCalc / abs(omegaCalc)) * min([abs(omegaCalc),abs(self.MAX_OMEGA)])
         else:
             velocity = 0
             omega = 0
-
-        print('rho: ' + str(round(rho,2)) + 
-            ' X: ' + str(round(state[0],2)) + 
-            ' Y: ' + str(round(state[1],2)) + 
-            ' vel: ' +  str(round(velocity,3)) + ' done: ' + str(done))
+        if False:
+            print('rho: ' + str(round(rho,2)) + 
+                ' X: ' + str(round(state[0],2)) + 
+                ' Y: ' + str(round(state[1],2)) +
+                ' Theta: ' + str(round(state[2],2)) +
+                ' vel: ' +  str(round(velocity,3)) + 
+                ' omega: ' +  str(round(omega,3)) +
+                ' done: ' + str(done))
         
-        return(velocity,omega,done)
+        return(velocity,omega,done,rho,state[0],state[1])
         

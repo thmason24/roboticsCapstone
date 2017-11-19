@@ -25,6 +25,7 @@ remoteFile = '/home/pi/catkin_ws/src/robot_control/src/RobotControl.py'
 scp.put(localFile, remoteFile) 
 scp.put('params.yaml','/home/pi/catkin_ws/src/robot_control/src/params.yaml')
 scp.put('DiffDriveController.py','/home/pi/catkin_ws/src/robot_control/src/DiffDriveController.py')
+scp.put('rospy/dc_motor_driver/src/motor_driver.py','/home/pi/catkin_ws/src/dc_motor_driver/src/motor_driver.py')
 
 #close scp
 scp.close()
@@ -50,10 +51,11 @@ export ROS_MASTER_URI='http://localhost:11311'
 
 env;
 """
-command = pre_command + 'roslaunch robot_control robot_control.launch'
+if True:
+	command = pre_command + 'roslaunch robot_control robot_control.launch'
 
 
-thread = threading.Thread(target=ssh_exec_thread, args=(ssh, command))
-thread.start()
-#    ...do something else...
-thread.join()
+	thread = threading.Thread(target=ssh_exec_thread, args=(ssh, command))
+	thread.start()
+	#    ...do something else...
+	thread.join()
