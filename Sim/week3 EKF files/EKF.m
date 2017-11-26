@@ -2,11 +2,12 @@
 function EKF()
   % starter code for loading both trials and plotting the result
   load data.mat
+  close all
 
   figure('Name', 'Trial 0')
   EKFfromData(trial0);
-  figure('Name', 'Trial 1')
-  EKFfromData(trial1);
+  %figure('Name', 'Trial 1')
+  %EKFfromData(trial1);
 end
 
 function est = EKFfromData(a)
