@@ -11,5 +11,10 @@ function u = controller(params, t, phi, phidot)
   % end
   % 
   u = 0;
+  Kp = 100;
+  Kd = 2;
+  
+  u = Kp*phi + Kd*phidot;
+  
 end
 
