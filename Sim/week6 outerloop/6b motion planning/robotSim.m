@@ -14,7 +14,7 @@ function robotSim()
   % NOTE: change this between @trajStep and @trajSin to test
   params.traj = @trajStep;
 
-  tsim = 10;
+  tsim = 2;
   y0=[0,0,0,0]';
   timestep = 0.01;
 
@@ -24,6 +24,8 @@ function robotSim()
   for l=0:timestep:tsim-timestep
     % if you want more feedback as the sim is integrating, uncomment the following line (will count up to 10)
     dispstat(sprintf('t = %.2fs (out of %d)',l+timestep,tsim)); 
+
+    
     [tl,Xl] = ode45(@(t,y) dynamics(params,t,y),[l,l+timestep-1e-6],y0);
     y0 = Xl(end,:);
     % add noise to the angles
