@@ -14,7 +14,7 @@ function robotSim()
   % NOTE: change this between @trajStep and @trajSin to test
   params.traj = @trajStep;
 
-  tsim = 2;
+  tsim = 10;
   y0=[0,0,0,0]';
   timestep = 0.01;
 

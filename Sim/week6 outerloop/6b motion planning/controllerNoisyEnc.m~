@@ -17,7 +17,7 @@ function u = controllerNoisyEnc(params, t, obs, th, dth)
   
   
   kp = 0.1;
-  kd = -0.00001;
+  kd = -0.0001;
   
   %works ok for step
   %kp = 0.006;
@@ -27,7 +27,6 @@ function u = controllerNoisyEnc(params, t, obs, th, dth)
   
   %x_error = 0.1 + 0.2*sin(t);
   phides_p = kp*x_error;
-  
   phides_v = kd*xdot;
   phides = phides_p + phides_v;
   %phides = 0.2 + 0.4*sin(3*t);
@@ -55,7 +54,7 @@ function u = controllerNoisyEnc(params, t, obs, th, dth)
 
   %phides = pi/4;
   u = Kphi_p*sin(phi-phides)+Kphi_d*dphi;
-  fprintf('t: %2.2f  phides %2.2f phi %2.2f dx %2.2f x %2.2f xerror %2.2f phides_p %2.2f phides_v %2.4f\n' , t, phides, phi, xdot, x,  x_error, phides_p, phides_v)
+  fprintf('t: %2.2f  phides %2.2f phi %2.2f dphi %2.2  x %2.2f xerror %2.2f phides_p %2.2f phides_v %2.2f\n' , t, phides, phi, x,  x_error, phides_p, phides_v)
   %u = 0;
   
 end
