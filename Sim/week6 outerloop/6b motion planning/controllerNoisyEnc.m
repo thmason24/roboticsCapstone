@@ -16,22 +16,28 @@ function u = controllerNoisyEnc(params, t, obs, th, dth)
   xdot = params.r*(dphi + dth);
   
   
-  kp = 0.1;
-  kd = -0.00001;
+  kp = 1.0;
+  kd = -0.09;
+  
+  Kphi_p = 10;
+  Kphi_d = 0.1;
+  
+  
+  %best
+  %Kphi_p = 200;
+  %Kphi_d = 0.1;
   
   %works ok for step
   %kp = 0.006;
-  %kd = 0.0002;
-  
-  
+  %kd = 0.0002
   
   %x_error = 0.1 + 0.2*sin(t);
-  phides_p = kp*x_error;
-  
-  phides_v = kd*xdot;
-  phides = phides_p + phides_v;
-  %phides = 0.2 + 0.4*sin(3*t);
-  if true      
+  ddx_p = kp*x_error;
+  ddx_v = kd*xdot;
+  ddx = ddx_p + ddx_v;
+  beta = 1;
+  phides = asin(ddx);
+  if false      
       phiMax = 60*pi/180;
       if phides > phiMax
           phides = phiMax;
@@ -41,22 +47,23 @@ function u = controllerNoisyEnc(params, t, obs, th, dth)
       end
   end
   
-  Kphi_p = 45000;
-  Kphi_d = 1;
-
-  
-  %works pretty well but doesn't like starting at phi 0  
-  %Kphi_p = 30000;
-  %Kphi_d = 1;
+  %Kphi_p = 200;
+  %Kphi_d = 0.1;
+  %phides = 0.00 + 0.4*sin(t);
+  %phides = pi/4;
+  %works pretty well   
+  %Kphi_p = 300;
+  %Kphi_d = 0.1;
 
   %works for stable angle
-  %Kphi_p = 500;
-  %Kphi_d = 2;
+  %Kphi_p = 300;
+  %Kphi_d = 1;
 
-  %phides = pi/4;
   u = Kphi_p*sin(phi-phides)+Kphi_d*dphi;
-  fprintf('t: %2.2f  phides %2.2f phi %2.2f dx %2.2f x %2.2f xerror %2.2f phides_p %2.2f phides_v %2.4f\n' , t, phides, phi, xdot, x,  x_error, phides_p, phides_v)
-  %u = 0;
+  if mod(t,0.05) == 0 && true
+      fprintf('t: %2.2f  phides %2.2f phi %2.2f dx %2.2f x %2.2f xerror %2.2f ddx_p %2.2f ddx_v %2.4f\n' , t, phides, phi, xdot, x,  x_error, ddx_p, ddx_v)
+  end
+      %u = 0;
   
 end
 
